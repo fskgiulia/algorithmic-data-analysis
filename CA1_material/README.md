@@ -1,3 +1,6 @@
+## Methods
+Support Vector Machines and Ensemble Methods
+
 ## Datasets
 
 *iris* from <https://archive.ics.uci.edu/dataset/53/iris>
@@ -11,5 +14,4 @@ The file `creditDE.csv` contains a variant of the dataset from the UCI data repo
 
 ## Tools
 
-`classification_resources.py` some potentially useful code snippets.
-The code is incomplete. Look for dots (## ...) to find the spots you need to fill in and edit to make the code perform the required functionalities.
+`classification_resources.py` contains the implementation of useful functions.
