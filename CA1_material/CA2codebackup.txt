@@ -1,0 +1,86 @@
+## GSP
+# implementation of the generalized sequential pattern mining (GSP) algorithm for mining frequent patterns from discrete sequences
+
+def get_sequences_from_file(file_path):
+    sequences = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            timestamp, sequence = line.strip().split()[0], line.strip().split()[1:]
+            sequences.append(sequence)
+    return sequences
+
+def join_sequences(sequences, k):
+    candidates = set()
+    sequence_list = list(sequences)
+    for i in range(len(sequence_list)):
+        for j in range(i + 1, len(sequence_list)):
+            if sequence_list[i][:k - 1] == sequence_list[j][:k - 1]:
+                new_sequence = tuple(list(sequence_list[i][:k - 1]) + [sequence_list[i][k - 1]] + [sequence_list[j][k - 1]])
+                candidates.add(new_sequence)
+    return candidates
+
+def consecutive_tuple(lst, tpl):
+    k = 0
+    for i in range(len(lst) - 1):
+        if (lst[i][0], lst[i + 1][0]) == tpl:
+            k += 1
+    
+    return k
+
+def count_support(sequences, candidates):
+    support = {}
+    for candidate in candidates:
+        num = consecutive_tuple(sequences,candidate)
+        if num!=0:
+            support[candidate] = num
+    return support
+
+def gsp(dataset, minsup):
+    k = 1
+    item_counts = {}
+    for sequence in dataset:
+        for item in sequence:
+            if item in item_counts:
+                item_counts[item] += 1
+            else:
+                item_counts[item] = 1
+
+    frequent_1_itemsets = {item: count for item, count in item_counts.items() if count >= minsup}
+    frequent_patterns = {tuple([item]): count for item, count in frequent_1_itemsets.items()} # dict
+    result = {}
+
+    while k < len(frequent_patterns)+1:
+
+        # generate C_k+1 by joining pairs of sequences from F_k
+        candidates = join_sequences(frequent_patterns.keys(), k)
+        candidate_support = count_support(dataset, candidates)
+
+        # S in C_k+1
+        frequent_patterns = {pattern: support for pattern, support in candidate_support.items() if support >= minsup} # add to result if the support is > minsup
+        result.update(frequent_patterns) # F_k+1
+
+        k += 1
+
+    return result # dict object made of 'pattern' and 'support'
+
+## Apply the algorithm on the CRSW dataset:
+# `2019-01-03_itemsets-CRSW.txt` Two months worth of weather in Kuopio (January–February 2019), obtained from https://en.ilmatieteenlaitos.fi/download-observations#!/
+# Each line represents weather events during one hour as an itemset. The first column contains the contextual attribute, i.e. indication of time in Year-Month-Day_Hour format.
+# The second column contains the itemset. C, R S and W stand respectively for clouds, precipitation, sunshine and wind.
+
+file_path = "2019-01-03_itemsets-CRSW.txt" 
+minsup = 40
+dataset = get_sequences_from_file(file_path)
+result = gsp(dataset, minsup)
+
+# Print the frequent patterns
+print(f"Minimum support threshold = {minsup}")
+print("Frequent patterns:")
+print(list(result.items()))
+
+# Try diff erent values for the mininum support threshold, diff erent constraints such as max gap and max span,
+# and considering the data either as one long sequence or with each day as a separate short sequence. You might
+# also try replacing repeated occurrences of the same itemset by a single copy, i.e. represent constant weather
+# during successive hours with only one itemset.
+# Report on the type and number of patt erns obtained under diff erent conditions.
+
